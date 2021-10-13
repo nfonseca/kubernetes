@@ -1,2 +1,3 @@
 # kubernetes
-Repo to store some yaml files for learning k8s
+
+This is a place where I keep some very simple yaml files that I am building along my kubernetes learning journey.
