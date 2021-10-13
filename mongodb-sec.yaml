@@ -1,0 +1,8 @@
+apiVersion: v1
+data:
+  .dockerconfigjson: uuid
+kind: Secret
+metadata:
+  name: regcred
+  namespace: mongodb
+type: kubernetes.io/dockerconfigjson
