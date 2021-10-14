@@ -1,0 +1,13 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mongodb-vsan-pvc
+  namespace: mongodb
+  annotations:
+    volume.beta.kubernetes.io/storage-class: vsan-raid1
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
