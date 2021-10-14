@@ -1,0 +1,8 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: vsan-raid1
+provisioner: kubernetes.io/vsphere-volume
+parameters:
+    datastore: VxRail-Virtual-SAN-Datastore-b1561e07-48a3-4313-951c-8871ec88b423
+    hostFailuresToTolerate: "1"
