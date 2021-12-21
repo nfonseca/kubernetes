@@ -1,0 +1,18 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: fio
+spec:
+  parallelism: 4
+  completions: 4
+  template:
+    spec:
+      containers:
+      - name: fio
+        image: ljishen/fio
+        command:
+        - sh
+        - -c
+        - fio --name=randwrite --ioengine=libaio --iodepth=1 --rw=randwrite --bs=8k --direct=0 --size=2048M --numjobs=8 --runtime=3600 --time_based --group_reporting
+      restartPolicy: Never
+  backoffLimit: 4
