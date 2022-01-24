@@ -1,4 +1,63 @@
 apiVersion: v1
+kind: Service
+metadata:
+  name: fio
+  labels:
+    app: fio
+spec:
+  ports:
+  - port: 80
+    name: fio
+  clusterIP: None
+  selector:
+    app: fio
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: fio
+spec:
+  selector:
+    matchLabels:
+      app: fio # has to match .spec.template.metadata.labels
+  serviceName: "fio"
+  replicas: 4 # by default is 1
+  template:
+    metadata:
+      labels:
+        app: fio # has to match .spec.selector.matchLabels
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: fio
+        image: ljishen/fio
+        command:
+        - sh
+        - -c
+        - fio /etc/fio/fio.parm --output=/tmp/fio.out ; sleep 600
+        ports:
+        - containerPort: 80
+          name: fio
+        volumeMounts:
+        - name: fio-data
+          mountPath: /mnt/fio-data
+        - name: fio-parm
+          mountPath: /etc/fio
+      volumes:
+      - name: fio-parm
+        configMap:
+          name: fio-parm
+  volumeClaimTemplates:
+  - metadata:
+      name: fio-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "vsan"
+      resources:
+        requests:
+          storage: 16Gi
+---
+apiVersion: v1
 items:
 - apiVersion: v1
   data:
