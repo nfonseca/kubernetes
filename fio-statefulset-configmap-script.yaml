@@ -52,6 +52,7 @@ spec:
       - name: fio-script
         configMap:
           name: fio-script
+          defaultMode: 0755
   volumeClaimTemplates:
   - metadata:
       name: fio-data
