@@ -61,7 +61,7 @@ spec:
       storageClassName: "vsan"
       resources:
         requests:
-          storage: 16Gi
+          storage: 32Gi
 ---
 apiVersion: v1
 items:
@@ -79,14 +79,15 @@ items:
       disable_clat=1
       clat_percentiles=0
       direct=1
-      ramp_time=30
-      runtime=300
+      ramp_time=10
+      runtime=30
+      iodepth=2
       ################
       #  file section
       ################
-      filesize=1g
+      filesize=2g
       directory=/mnt/fio-data
-      filename=1:2:3:4:5:6:7:8:9:10:11:12
+      filename=1:2:3:4:5:6:7:8:9:10:11:12:13:14:15
 
       # JOB DEFINITIONS
 
@@ -95,14 +96,12 @@ items:
       bs=4k
       rw=randrw
       rwmixread=70
-      numjobs=4
 
       [OLTP16K]
       stonewall
       bs=16k
       rw=randrw
       rwmixread=70
-      numjobs=4
 
   kind: ConfigMap
   metadata:
@@ -122,10 +121,10 @@ items:
 
       # Generate 10 sequence numbers
 
-      for iodepth in `seq 10`
+      for numjobs in `seq 10`
       do
           # Increase the IO-Depth
-        fio /etc/fio/fio.parm --iodepth=$iodepth  --output=/tmp/fio-$iodepth.out
+        fio /etc/fio/fio.parm --numjobs=$numjobs  --output=/tmp/fio-$numjobs.out
       done
 
   kind: ConfigMap
@@ -136,4 +135,3 @@ kind: List
 metadata:
   resourceVersion: ""
   selfLink: ""
-
