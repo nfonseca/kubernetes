@@ -39,9 +39,9 @@ spec:
         - containerPort: 80
           name: fio
         volumeMounts:
-        - name: fio-data
+        - name: fio-data1
           mountPath: /mnt/fio-data1
-        - name: fio-data
+        - name: fio-data2
           mountPath: /mnt/fio-data2
         - name: fio-parm
           mountPath: /etc/fio
@@ -57,7 +57,15 @@ spec:
           defaultMode: 0755
   volumeClaimTemplates:
   - metadata:
-      name: fio-data
+      name: fio-data1
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "vsan"
+      resources:
+        requests:
+          storage: 32Gi
+  - metadata:
+      name: fio-data2
     spec:
       accessModes: [ "ReadWriteOnce" ]
       storageClassName: "vsan"
