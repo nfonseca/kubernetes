@@ -73,7 +73,7 @@ items:
       disable_clat=1
       clat_percentiles=0
       direct=1
-      iodepth=1
+      iodepth=4
       ramp_time=30
       runtime=300
       ################
@@ -90,14 +90,14 @@ items:
       bs=4k
       rw=randrw
       rwmixread=70
-      numjobs=16
+      numjobs=4
 
       [OLTP16K]
       stonewall
       bs=16k
       rw=randrw
       rwmixread=70
-      numjobs=16
+      numjobs=4
 
   kind: ConfigMap
   metadata:
