@@ -92,8 +92,8 @@ items:
       disable_clat=1
       clat_percentiles=0
       direct=1
-      ramp_time=30
-      runtime=300
+      ramp_time=10
+      runtime=30
       iodepth=2
       size=10%
       filename=/dev/sdc:/dev/sdd
