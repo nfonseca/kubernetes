@@ -95,7 +95,7 @@ items:
       invalidate=0
       ramp_time=10
       runtime=30
-      iodepth=2
+      iodepth=4
       size=10%
       filename=/dev/sdc:/dev/sdd
 
