@@ -32,7 +32,7 @@ spec:
       - name: fio
         image: mayadata/fio
         command:
-        - sh
+        - /bin/sh
         - -c
         - /tmp/fio-script/fio-loop-iodepth.sh ; sleep 6000
         ports:
