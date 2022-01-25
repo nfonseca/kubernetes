@@ -60,6 +60,7 @@ spec:
   - metadata:
       name: fio-data1
     spec:
+      volumeMode: Block
       accessModes: [ "ReadWriteOnce" ]
       storageClassName: "vsan"
       resources:
@@ -68,6 +69,7 @@ spec:
   - metadata:
       name: fio-data2
     spec:
+      volumeMode: Block
       accessModes: [ "ReadWriteOnce" ]
       storageClassName: "vsan"
       resources:
