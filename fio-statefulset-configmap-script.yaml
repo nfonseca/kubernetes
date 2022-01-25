@@ -92,7 +92,7 @@ items:
       disable_clat=1
       clat_percentiles=0
       direct=1
-      invalidate=false
+      invalidate=0
       ramp_time=10
       runtime=30
       iodepth=2
