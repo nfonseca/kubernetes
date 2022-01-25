@@ -30,9 +30,9 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
       - name: fio
-        image: mayadata/fio
+        image: humio/fio
         command:
-        - /bin/sh
+        - /bin/bash
         - -c
         - /tmp/fio-script/fio-loop-iodepth.sh ; sleep 6000
         ports:
@@ -128,11 +128,11 @@ items:
 - apiVersion: v1
   data:
     fio-loop-iodepth.sh: |+
-      #!/bin/sh
+      #!/bin/bash
 
       # Generate 10 sequence numbers
 
-      for numjobs in `2 2 20`
+      for numjobs in `seq 2 2 20`
       do
           # Increase the IO-Depth
         fio /etc/fio/fio.parm --numjobs=$numjobs  --output=/tmp/fio-$numjobs.out
