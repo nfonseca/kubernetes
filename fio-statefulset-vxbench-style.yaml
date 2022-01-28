@@ -162,7 +162,7 @@ items:
       ramp_time=10
       runtime=300
       iodepth=4
-      size=10%
+      size=75Gi
       filename=/dev/sdc:/dev/sdd:/dev/sde:/dev/sdf:/dev/sdg:/dev/sdh:/dev/sdi:/dev/sdj
 
 
@@ -174,9 +174,27 @@ items:
       rw=randrw
       rwmixread=70
 
+      [OLTP8K]
+      stonewall
+      bs=8k
+      rw=randrw
+      rwmixread=70
+
       [OLTP16K]
       stonewall
       bs=16k
+      rw=randrw
+      rwmixread=70
+
+      [OLTP32K]
+      stonewall
+      bs=32k
+      rw=randrw
+      rwmixread=70
+
+      [OLTP64K]
+      stonewall
+      bs=64k
       rw=randrw
       rwmixread=70
 
