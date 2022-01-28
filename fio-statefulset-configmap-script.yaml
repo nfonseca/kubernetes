@@ -132,7 +132,7 @@ items:
 
       # Generate 10 sequence numbers
 
-      for numjobs in `seq 2 2 20`
+      for numjobs in `seq 4 4 40`
       do
           # Increase the IO-Depth
         fio /etc/fio/fio.parm --numjobs=$numjobs  --output=/tmp/fio-$numjobs.out
