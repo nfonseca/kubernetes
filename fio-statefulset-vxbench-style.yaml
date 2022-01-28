@@ -1,0 +1,214 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fio
+  labels:
+    app: fio
+spec:
+  ports:
+  - port: 80
+    name: fio
+  clusterIP: None
+  selector:
+    app: fio
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: fio
+spec:
+  selector:
+    matchLabels:
+      app: fio # has to match .spec.template.metadata.labels
+  serviceName: "fio"
+  replicas: 4 # by default is 1
+  template:
+    metadata:
+      labels:
+        app: fio # has to match .spec.selector.matchLabels
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: fio
+        image: humio/fio
+        command:
+        - /bin/bash
+        - -c
+        - /tmp/fio-script/fio-loop-iodepth.sh ; sleep 7d
+        ports:
+        - containerPort: 80
+          name: fio
+        volumeMounts:
+        - name: fio-parm
+          mountPath: /etc/fio
+        - name: fio-script
+          mountPath: /tmp/fio-script
+        volumeDevices:
+        - devicePath: /dev/sdc
+          name: fio-data1
+        - devicePath: /dev/sdd
+          name: fio-data2
+        - devicePath: /dev/sde
+          name: fio-data3
+        - devicePath: /dev/sdf
+          name: fio-data4
+        - devicePath: /dev/sdg
+          name: fio-data5
+        - devicePath: /dev/sdh
+          name: fio-data6
+        - devicePath: /dev/sdi
+          name: fio-data7
+        - devicePath: /dev/sdj
+          name: fio-data8
+      volumes:
+      - name: fio-parm
+        configMap:
+          name: fio-parm
+      - name: fio-script
+        configMap:
+          name: fio-script
+          defaultMode: 0755
+  volumeClaimTemplates:
+  - metadata:
+      name: fio-data1
+    spec:
+      volumeMode: Block
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "vsan"
+      resources:
+        requests:
+          storage: 200Gi
+  - metadata:
+      name: fio-data2
+    spec:
+      volumeMode: Block
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "vsan"
+      resources:
+        requests:
+          storage: 200Gi
+  - metadata:
+      name: fio-data3
+    spec:
+      volumeMode: Block
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "vsan"
+      resources:
+        requests:
+          storage: 200Gi
+  - metadata:
+      name: fio-data4
+    spec:
+      volumeMode: Block
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "vsan"
+      resources:
+        requests:
+          storage: 200Gi
+  - metadata:
+      name: fio-data5
+    spec:
+      volumeMode: Block
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "vsan"
+      resources:
+        requests:
+          storage: 200Gi
+  - metadata:
+      name: fio-data6
+    spec:
+      volumeMode: Block
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "vsan"
+      resources:
+        requests:
+          storage: 200Gi
+  - metadata:
+      name: fio-data7
+    spec:
+      volumeMode: Block
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "vsan"
+      resources:
+        requests:
+          storage: 200Gi
+  - metadata:
+      name: fio-data8
+    spec:
+      volumeMode: Block
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "vsan"
+      resources:
+        requests:
+          storage: 200Gi
+---
+apiVersion: v1
+items:
+- apiVersion: v1
+  data:
+    fio.parm: |+
+      [global]
+      ioengine=libaio
+      norandommap
+      time_based=1
+      group_reporting=1
+      invalidate=1
+      disable_lat=0
+      disable_slat=1
+      disable_clat=1
+      clat_percentiles=0
+      direct=1
+      invalidate=0
+      ramp_time=10
+      runtime=300
+      iodepth=4
+      size=10%
+      filename=/dev/sdc:/dev/sdd:/dev/sde:/dev/sdf:/dev/sdg:/dev/sdh:/dev/sdi:/dev/sdj
+
+
+      # JOB DEFINITIONS
+
+      [OLTP4K]
+      stonewall
+      bs=4k
+      rw=randrw
+      rwmixread=70
+
+      [OLTP16K]
+      stonewall
+      bs=16k
+      rw=randrw
+      rwmixread=70
+
+  kind: ConfigMap
+  metadata:
+    name: fio-parm
+    namespace: default
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
+---
+apiVersion: v1
+items:
+- apiVersion: v1
+  data:
+    fio-loop-iodepth.sh: |+
+      #!/bin/bash
+
+      # Generate 10 sequence numbers
+
+      for numjobs in `seq 4 4 40`
+      do
+          # Increase the IO-Depth
+        fio /etc/fio/fio.parm --numjobs=$numjobs  --output=/tmp/fio-$numjobs.out
+      done
+
+  kind: ConfigMap
+  metadata:
+    name: fio-script
+    namespace: default
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
