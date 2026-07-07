@@ -1,0 +1,120 @@
+# =============================================================================
+# OpenShift - Ubuntu Persistent Pod Deployment
+# =============================================================================
+# Resources:
+#   CPU     : 2 vCPUs
+#   Memory  : 8 Gi
+#   Storage : 64 Gi (PersistentVolumeClaim)
+#
+# Prerequisites:
+#   - An OpenShift cluster with a dynamic StorageClass available.
+#   - Update `storageClassName` below to match your cluster's StorageClass
+#     (e.g., ocs-storagecluster-ceph-rbd, thin-csi, gp2-csi).
+#   - Grant the anyuid SCC to the service account so the Ubuntu container
+#     can run (Ubuntu base image runs as root by default):
+#
+#       oc adm policy add-scc-to-user anyuid \
+#         -z ubuntu-sa \
+#         -n ubuntu-workspace
+#
+# Deploy:
+#   oc apply -f openshift-ubuntu-persistent-pod.yaml
+#
+# Access the running pod:
+#   oc exec -it deploy/ubuntu-persistent -n ubuntu-workspace -- /bin/bash
+# =============================================================================
+
+---
+# 1. Namespace / OpenShift Project
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ubuntu-workspace
+  labels:
+    app: ubuntu-persistent
+
+---
+# 2. Dedicated ServiceAccount
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ubuntu-sa
+  namespace: ubuntu-workspace
+
+---
+# 3. PersistentVolumeClaim — 64 Gi block storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ubuntu-pvc
+  namespace: ubuntu-workspace
+  labels:
+    app: ubuntu-persistent
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 64Gi
+  storageClassName: ocs-storagecluster-ceph-rbd  # <-- Update to match your StorageClass
+
+---
+# 4. Deployment — Ubuntu 22.04 LTS persistent pod
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ubuntu-persistent
+  namespace: ubuntu-workspace
+  labels:
+    app: ubuntu-persistent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ubuntu-persistent
+  strategy:
+    type: Recreate  # Ensures the PVC is released before a new pod mounts it
+  template:
+    metadata:
+      labels:
+        app: ubuntu-persistent
+    spec:
+      serviceAccountName: ubuntu-sa
+
+      # Security context — requires anyuid SCC (see Prerequisites above)
+      securityContext:
+        runAsUser: 0
+        fsGroup: 0
+
+      containers:
+        - name: ubuntu
+          image: ubuntu:22.04
+          # Keep the container alive indefinitely for interactive / tooling use
+          command: ["/bin/bash", "-c", "sleep infinity"]
+
+          resources:
+            requests:
+              cpu: "2"
+              memory: "8Gi"
+            limits:
+              cpu: "2"
+              memory: "8Gi"
+
+          volumeMounts:
+            - name: ubuntu-storage
+              mountPath: /data         # Persistent data directory inside the container
+
+          # Liveness probe — confirms the process is alive
+          livenessProbe:
+            exec:
+              command: ["/bin/bash", "-c", "echo alive"]
+            initialDelaySeconds: 10
+            periodSeconds: 30
+
+      volumes:
+        - name: ubuntu-storage
+          persistentVolumeClaim:
+            claimName: ubuntu-pvc
+
+      # Restart policy for Deployment pods must be Always
+      restartPolicy: Always
