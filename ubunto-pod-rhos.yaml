@@ -6,6 +6,12 @@
 #   Memory  : 8 Gi
 #   Storage : 64 Gi (PersistentVolumeClaim)
 #
+# Tooling installed at pod start-up:
+#   - oc        (OpenShift CLI — stable release, includes bundled kubectl)
+#   - kubectl   (extracted from the oc tarball)
+#   - helm      (Helm 3 — latest via official install script)
+#   - jq        (via apt)
+#
 # Prerequisites:
 #   - An OpenShift cluster with a dynamic StorageClass available.
 #   - Update `storageClassName` below to match your cluster's StorageClass
@@ -89,8 +95,33 @@ spec:
       containers:
         - name: ubuntu
           image: ubuntu:22.04
-          # Keep the container alive indefinitely for interactive / tooling use
-          command: ["/bin/bash", "-c", "sleep infinity"]
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -e
+
+              echo "==> [1/4] Installing system dependencies (curl, tar, gzip, ca-certificates, jq)..."
+              apt-get update -qq
+              apt-get install -y -qq curl tar gzip ca-certificates jq
+
+              echo "==> [2/4] Installing OpenShift CLI (oc) and kubectl from OpenShift mirror..."
+              curl -fsSLo /tmp/oc.tar.gz \
+                "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz"
+              tar -xzf /tmp/oc.tar.gz -C /usr/local/bin oc kubectl
+              chmod +x /usr/local/bin/oc /usr/local/bin/kubectl
+              rm -f /tmp/oc.tar.gz
+
+              echo "==> [3/4] Installing Helm 3..."
+              curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+              echo "==> [4/4] Tool versions installed:"
+              oc version --client   2>/dev/null || true
+              kubectl version --client 2>/dev/null || true
+              helm version          2>/dev/null || true
+              jq --version          2>/dev/null || true
+
+              echo "==> All tools ready. Pod is running."
+              sleep infinity
 
           resources:
             requests:
@@ -104,12 +135,21 @@ spec:
             - name: ubuntu-storage
               mountPath: /data         # Persistent data directory inside the container
 
-          # Liveness probe — confirms the process is alive
+          # startupProbe — waits up to 5 minutes for tool installation to complete
+          startupProbe:
+            exec:
+              command: ["/bin/bash", "-c", "command -v oc && command -v kubectl && command -v helm && command -v jq"]
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            failureThreshold: 20
+
+          # Liveness probe — confirms the process is alive after tools are installed
           livenessProbe:
             exec:
-              command: ["/bin/bash", "-c", "echo alive"]
-            initialDelaySeconds: 10
-            periodSeconds: 30
+              command: ["/bin/bash", "-c", "command -v oc && command -v kubectl && command -v helm && command -v jq"]
+            initialDelaySeconds: 0
+            periodSeconds: 60
+            failureThreshold: 3
 
       volumes:
         - name: ubuntu-storage
